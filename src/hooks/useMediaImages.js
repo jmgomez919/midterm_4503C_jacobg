@@ -3,9 +3,6 @@ import { supabase } from '../lib/supabase.js'
 
 const BUCKET = 'media-images'
 
-// Fetches and manages all image records for the logged-in user.
-// Images are stored in Supabase Storage; their paths are recorded in media_images.
-// State shape: { [mediaId]: [{ id, url, storagePath, position }, ...] }
 function useMediaImages(user) {
   const [images, setImages] = useState({})
 
@@ -19,11 +16,10 @@ function useMediaImages(user) {
       .from('media_images')
       .select('*')
       .eq('user_id', user.id)
-      .order('position', { ascending: true })
+      .order('created_at', { ascending: true }) // order by insert time, not position
 
     if (error) { console.error('Failed to load images:', error.message); return }
 
-    // Group rows by media_id and resolve each storage_path to a public URL
     const grouped = {}
     for (const row of data) {
       if (!grouped[row.media_id]) grouped[row.media_id] = []
@@ -32,28 +28,38 @@ function useMediaImages(user) {
     setImages(grouped)
   }
 
-  // Uploads one or more files for a given media item.
-  // Silently skips uploads that would exceed 5 images.
+  // Uploads files and returns { success: true } or { success: false, error: string }
+  // so the caller can surface failures to the user instead of silently swallowing them.
   async function uploadImages(mediaId, files) {
     const mediaIdStr = String(mediaId)
     const existing   = images[mediaIdStr] || []
     const slots      = 5 - existing.length
-    if (slots <= 0) return
+    if (slots <= 0) return { success: false, error: 'Maximum of 5 photos already reached.' }
 
     const toUpload = Array.from(files).slice(0, slots)
     const added    = []
+    let   lastError = null
 
     for (let i = 0; i < toUpload.length; i++) {
-      const file     = toUpload[i]
-      const position = existing.length + i
-      const ext      = file.name.split('.').pop().toLowerCase()
-      const path     = `${user.id}/${mediaIdStr}/${position}_${Date.now()}.${ext}`
+      const file = toUpload[i]
+      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase()
 
+      // Include a timestamp in the path so retries never collide in Storage
+      const path = `${user.id}/${mediaIdStr}/${Date.now()}_${i}.${ext}`
+
+      // upsert:true avoids "duplicate path" errors on retry
       const { error: storageErr } = await supabase.storage
         .from(BUCKET)
-        .upload(path, file, { upsert: false })
+        .upload(path, file, { upsert: true })
 
-      if (storageErr) { console.error('Upload failed:', storageErr.message); continue }
+      if (storageErr) {
+        console.error('Storage upload failed:', storageErr.message)
+        lastError = `Storage error: ${storageErr.message}`
+        continue
+      }
+
+      // position = number of images that existed + how many we've added so far
+      const position = existing.length + added.length
 
       const { data: row, error: dbErr } = await supabase
         .from('media_images')
@@ -61,7 +67,13 @@ function useMediaImages(user) {
         .select()
         .single()
 
-      if (dbErr) { console.error('Image record failed:', dbErr.message); continue }
+      if (dbErr) {
+        console.error('Image record insert failed:', dbErr.message)
+        lastError = `Database error: ${dbErr.message}`
+        // Remove the orphaned file from Storage so it doesn't accumulate
+        await supabase.storage.from(BUCKET).remove([path])
+        continue
+      }
 
       added.push(rowToImage(row))
     }
@@ -72,9 +84,19 @@ function useMediaImages(user) {
         [mediaIdStr]: [...(prev[mediaIdStr] || []), ...added],
       }))
     }
+
+    if (added.length === 0) {
+      return { success: false, error: lastError || 'Upload failed. Check that the Supabase storage bucket and media_images table exist.' }
+    }
+
+    // Partial success: some files uploaded, some failed
+    if (added.length < toUpload.length) {
+      return { success: true, partial: true, error: lastError }
+    }
+
+    return { success: true }
   }
 
-  // Deletes an image from both Supabase Storage and the media_images table.
   async function deleteImage(imageId, storagePath, mediaId) {
     await supabase.storage.from(BUCKET).remove([storagePath])
     await supabase.from('media_images').delete().eq('id', imageId)
@@ -89,7 +111,6 @@ function useMediaImages(user) {
   return { images, uploadImages, deleteImage }
 }
 
-// Converts a media_images DB row to the shape used in state
 function rowToImage(row) {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(row.storage_path)
   return {

@@ -201,6 +201,40 @@ body {
   padding: 0;
 }
 
+/* Pending thumbnail: dimmed while uploading */
+.img-thumb-pending .img-thumb {
+  opacity: 0.5;
+}
+
+/* Upload arrow overlay centered on the thumbnail */
+.img-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #fff;
+  pointer-events: none;
+}
+
+/* "uploading…" label next to the count */
+.img-uploading-label {
+  color: #718096;
+  font-style: italic;
+  font-size: 0.75rem;
+}
+
+.img-upload-error {
+  font-size: 0.8rem;
+  color: #c53030;
+  background-color: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 5px;
+  padding: 0.4rem 0.6rem;
+  margin-top: 0.4rem;
+}
+
 .img-add-btn {
   width: 58px;
   height: 58px;
@@ -419,13 +453,17 @@ body {
   border-color: #667eea;
   background-color: #fafbff;
   gap: 0.6rem;
-  padding: 1rem; /* restore padding — no full-bleed image in edit mode */
+  padding: 1rem;
+
+  /* Span every column in the grid so the form has full width */
+  grid-column: 1 / -1;
 }
 
 .edit-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  /* 4 equal columns when space allows, collapses gracefully on narrow screens */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
 }
 
 .edit-group {

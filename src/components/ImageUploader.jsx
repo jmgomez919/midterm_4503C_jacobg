@@ -1,47 +1,75 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 
-// ImageUploader shows thumbnails of existing uploaded images and an "Add" button.
-// Used inside edit mode (MediaCard / MediaTableRow) where the media id is already known.
-// Props:
-//   mediaId       — id of the item these images belong to
-//   itemImages    — array of { id, url, storagePath } for this item
-//   onUpload      — async (mediaId, FileList) => void
-//   onDelete      — async (imageId, storagePath, mediaId) => void
-//   maxImages     — max allowed (default 5)
 function ImageUploader({ mediaId, itemImages = [], onUpload, onDelete, maxImages = 5 }) {
-  const inputRef  = useRef(null)
-  const remaining = maxImages - itemImages.length
-  const canAdd    = remaining > 0
+  const inputRef    = useRef(null)
+  const [pending, setPending]     = useState([])  // in-flight previews
+  const [uploadError, setUploadError] = useState('')
+
+  const totalShown = itemImages.length + pending.length
+  const canAdd     = totalShown < maxImages
 
   async function handleFiles(e) {
-    if (e.target.files.length === 0) return
-    await onUpload(mediaId, e.target.files)
-    e.target.value = '' // allow re-selecting the same file
+    const files = Array.from(e.target.files)
+    if (files.length === 0) return
+    e.target.value = ''
+    setUploadError('')
+
+    const slots    = maxImages - totalShown
+    const toUpload = files.slice(0, slots)
+
+    // Show local previews immediately — thumbnails appear before Supabase responds
+    const previews = toUpload.map(file => ({
+      uid:       `${Date.now()}_${Math.random()}`,
+      objectUrl: URL.createObjectURL(file),
+    }))
+    setPending(prev => [...prev, ...previews])
+
+    // Upload to Supabase and check the result
+    const result = await onUpload(mediaId, toUpload)
+
+    // Always revoke object URLs and remove the pending placeholders
+    previews.forEach(p => URL.revokeObjectURL(p.objectUrl))
+    setPending(prev => prev.filter(p => !previews.some(pp => pp.uid === p.uid)))
+
+    // Surface any error to the user so they know the upload did not save
+    if (result?.success === false) {
+      setUploadError(result.error || 'Upload failed. Please try again.')
+    } else if (result?.partial) {
+      setUploadError(`Some photos could not be saved: ${result.error}`)
+    }
+    // On full success, itemImages prop will update automatically via useMediaImages state
   }
 
   return (
     <div className="img-uploader">
       <div className="img-thumb-row">
 
-        {/* Existing uploaded images */}
+        {/* Confirmed images saved in Supabase */}
         {itemImages.map(img => (
           <div key={img.id} className="img-thumb-wrap">
             <img src={img.url} alt="" className="img-thumb" />
             <button
               className="img-thumb-remove"
               onClick={() => onDelete(img.id, img.storagePath, mediaId)}
-              title="Remove image"
+              title="Remove"
             >×</button>
           </div>
         ))}
 
-        {/* Add button — hidden when limit reached */}
+        {/* In-flight previews with uploading indicator */}
+        {pending.map(p => (
+          <div key={p.uid} className="img-thumb-wrap img-thumb-pending">
+            <img src={p.objectUrl} alt="" className="img-thumb" />
+            <div className="img-thumb-overlay">↑</div>
+          </div>
+        ))}
+
         {canAdd && (
           <button
             type="button"
             className="img-add-btn"
             onClick={() => inputRef.current?.click()}
-            title={`Add up to ${remaining} more photo${remaining === 1 ? '' : 's'}`}
+            title={`Add up to ${maxImages - totalShown} more photo${maxImages - totalShown === 1 ? '' : 's'}`}
           >
             +
             <input
@@ -56,7 +84,16 @@ function ImageUploader({ mediaId, itemImages = [], onUpload, onDelete, maxImages
         )}
 
       </div>
-      <p className="img-uploader-count">{itemImages.length} / {maxImages} photos</p>
+
+      <p className="img-uploader-count">
+        {itemImages.length} / {maxImages} photos
+        {pending.length > 0 && <span className="img-uploading-label"> — uploading…</span>}
+      </p>
+
+      {/* Visible error message when Supabase upload fails */}
+      {uploadError && (
+        <p className="img-upload-error">{uploadError}</p>
+      )}
     </div>
   )
 }
