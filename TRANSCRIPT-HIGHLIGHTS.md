@@ -111,6 +111,19 @@ The updated schema (with the `media_images` table) had not been run. Resolved by
 
 ---
 
+## Personal Reflections
+
+### 1. Planning the structure of the website.
+In the first several prompts I created, I did a lot in designing a user-friendly application and ran through several tests to ensure said functions such as keeping data stored when logged off worked as intended.
+
+### 2. Setting up the SupaBase server.
+Before this project or course, I had never used a server host before. Claude was very helpful in walking me through what I needed to do to properly set my server to save information as opposed to using the local drive.
+
+### 3. Tackling the last few errors.
+The most prevalent error was trying to polish the ability of uploading images to my website. Claude helped to explain that I needed a storage bucket with specific priorities made to allow for uploading, viewing, and deleting images.
+
+---
+
 ## Repository
 
 **GitHub:** [midterm_4503C_jacobg](https://github.com/jmgomez919/midterm_4503C_jacobg)
