@@ -19,7 +19,7 @@ const mediaData = [
     genre: "Sci-Fi",
     year: 2010,
     description: "A thief who steals corporate secrets through dream-sharing technology is given the task of planting an idea.",
-    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Inception",
+    coverImage: "https://upload.wikimedia.org/wikipedia/en/2/2e/Inception_(2010)_theatrical_poster.jpg",
   },
   {
     id: 3,
@@ -37,7 +37,7 @@ const mediaData = [
     genre: "Crime",
     year: 1972,
     description: "The aging patriarch of an organized crime dynasty transfers control to his reluctant son.",
-    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=The+Godfather",
+    coverImage: "https://upload.wikimedia.org/wikipedia/en/1/1c/Godfather_ver1.jpg",
   },
   {
     id: 5,
@@ -55,7 +55,7 @@ const mediaData = [
     genre: "Sci-Fi",
     year: 2014,
     description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
-    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Interstellar",
+    coverImage: "https://upload.wikimedia.org/wikipedia/en/b/bc/Interstellar_film_poster.jpg",
   },
   {
     id: 7,
@@ -73,7 +73,7 @@ const mediaData = [
     genre: "Thriller",
     year: 2019,
     description: "A poor family schemes to become employed by a wealthy family, with darkly comic and tragic results.",
-    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Parasite",
+    coverImage: "https://upload.wikimedia.org/wikipedia/en/5/53/Parasite_(2019_film).png",
   },
   {
     id: 9,
@@ -91,7 +91,7 @@ const mediaData = [
     genre: "Animation",
     year: 2001,
     description: "A young girl wanders into a world ruled by spirits and must work to free herself and her parents.",
-    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Spirited+Away",
+    coverImage: "https://upload.wikimedia.org/wikipedia/en/d/db/Spirited_Away_Japanese_poster.png",
   },
   {
     id: 11,
@@ -109,7 +109,7 @@ const mediaData = [
     genre: "Action",
     year: 2008,
     description: "Batman faces the Joker, a criminal mastermind who seeks to create chaos in Gotham City.",
-    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=The+Dark+Knight",
+    coverImage: "https://upload.wikimedia.org/wikipedia/en/1/1c/The_Dark_Knight_(2008_film).jpg",
   },
 ]
 
