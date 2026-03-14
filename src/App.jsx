@@ -8,19 +8,26 @@ import CollapsibleSection from './components/CollapsibleSection.jsx'
 import useAuth from './hooks/useAuth.js'
 import useFavorites from './hooks/useFavorites.js'
 import useCustomMedia from './hooks/useCustomMedia.js'
+import useMediaImages from './hooks/useMediaImages.js'
 
 function App() {
   const { user, loading: authLoading, authError, signUp, signIn, signOut } = useAuth()
-  const { favorites, toggleFavorite } = useFavorites(user)
-  const { customMedia, addMedia, updateMedia, deleteMedia } = useCustomMedia(user)
+  const { favorites, toggleFavorite }                         = useFavorites(user)
+  const { customMedia, addMedia, updateMedia, deleteMedia }   = useCustomMedia(user)
+  const { images, uploadImages, deleteImage }                 = useMediaImages(user)
 
-  if (authLoading) {
-    return <div className="app-loading"><p>Loading...</p></div>
+  // Combines creating the media record and uploading any selected images.
+  // Called by AddMediaForm's onAdd prop.
+  async function handleAddMedia(item, imageFiles = []) {
+    const result = await addMedia(item)
+    if (result.success && imageFiles.length > 0) {
+      await uploadImages(result.id, imageFiles)
+    }
+    return result
   }
 
-  if (!user) {
-    return <AuthForm onSignIn={signIn} onSignUp={signUp} error={authError} />
-  }
+  if (authLoading) return <div className="app-loading"><p>Loading...</p></div>
+  if (!user)       return <AuthForm onSignIn={signIn} onSignUp={signUp} error={authError} />
 
   return (
     <div className="app">
@@ -38,14 +45,12 @@ function App() {
 
       <main className="app-content">
 
-        {/* ── Add New Media ── collapsible, starts open */}
         <CollapsibleSection title="Add New Media" defaultOpen={true}>
-          <AddMediaForm onAdd={addMedia} />
+          <AddMediaForm onAdd={handleAddMedia} />
         </CollapsibleSection>
 
         <hr className="section-divider" />
 
-        {/* ── Your Additions ── only shown when the user has added items */}
         {customMedia.length > 0 && (
           <>
             <CollapsibleSection title="Your Additions" defaultOpen={true}>
@@ -55,25 +60,29 @@ function App() {
                 toggleFavorite={toggleFavorite}
                 onUpdate={updateMedia}
                 onDelete={deleteMedia}
+                images={images}
+                onUpload={uploadImages}
+                onDeleteImage={deleteImage}
               />
             </CollapsibleSection>
             <hr className="section-divider" />
           </>
         )}
 
-        {/* ── Favorites ── collapsible */}
         <CollapsibleSection title="Favorites" defaultOpen={true}>
           <Favorites favorites={favorites} toggleFavorite={toggleFavorite} />
         </CollapsibleSection>
 
         <hr className="section-divider" />
 
-        {/* ── Library ── collapsible with grid/table view toggle */}
         <CollapsibleSection title="Library" defaultOpen={true}>
           <MediaList
             items={mediaData}
             favorites={favorites}
             toggleFavorite={toggleFavorite}
+            images={images}
+            onUpload={uploadImages}
+            onDeleteImage={deleteImage}
             showViewToggle={true}
           />
         </CollapsibleSection>

@@ -1,5 +1,6 @@
 // Sample media library — 12 items (mix of movies and books)
-// This is the app's data source until a real backend or state manager is added
+// coverImage: Open Library API for books (stable public URLs),
+//             placehold.co with brand colors for movies.
 
 const mediaData = [
   {
@@ -9,6 +10,7 @@ const mediaData = [
     genre: "Fantasy",
     year: 1937,
     description: "A fantasy adventure by J.R.R. Tolkien following Bilbo Baggins on an unexpected journey.",
+    coverImage: "https://covers.openlibrary.org/b/isbn/9780547928227-L.jpg",
   },
   {
     id: 2,
@@ -17,6 +19,7 @@ const mediaData = [
     genre: "Sci-Fi",
     year: 2010,
     description: "A thief who steals corporate secrets through dream-sharing technology is given the task of planting an idea.",
+    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Inception",
   },
   {
     id: 3,
@@ -25,6 +28,7 @@ const mediaData = [
     genre: "Sci-Fi",
     year: 1965,
     description: "A sweeping science fiction epic set on the desert planet Arrakis, following Paul Atreides.",
+    coverImage: "https://covers.openlibrary.org/b/isbn/9780441013593-L.jpg",
   },
   {
     id: 4,
@@ -33,6 +37,7 @@ const mediaData = [
     genre: "Crime",
     year: 1972,
     description: "The aging patriarch of an organized crime dynasty transfers control to his reluctant son.",
+    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=The+Godfather",
   },
   {
     id: 5,
@@ -41,6 +46,7 @@ const mediaData = [
     genre: "Drama",
     year: 1960,
     description: "A lawyer in the American South defends a Black man accused of a crime he did not commit.",
+    coverImage: "https://covers.openlibrary.org/b/isbn/9780061743528-L.jpg",
   },
   {
     id: 6,
@@ -49,6 +55,7 @@ const mediaData = [
     genre: "Sci-Fi",
     year: 2014,
     description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Interstellar",
   },
   {
     id: 7,
@@ -57,6 +64,7 @@ const mediaData = [
     genre: "Dystopian",
     year: 1949,
     description: "George Orwell's chilling portrayal of a totalitarian society under constant surveillance.",
+    coverImage: "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg",
   },
   {
     id: 8,
@@ -65,6 +73,7 @@ const mediaData = [
     genre: "Thriller",
     year: 2019,
     description: "A poor family schemes to become employed by a wealthy family, with darkly comic and tragic results.",
+    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Parasite",
   },
   {
     id: 9,
@@ -73,6 +82,7 @@ const mediaData = [
     genre: "Fiction",
     year: 1988,
     description: "A young shepherd travels from Spain to Egypt in search of treasure and self-discovery.",
+    coverImage: "https://covers.openlibrary.org/b/isbn/9780062315007-L.jpg",
   },
   {
     id: 10,
@@ -81,6 +91,7 @@ const mediaData = [
     genre: "Animation",
     year: 2001,
     description: "A young girl wanders into a world ruled by spirits and must work to free herself and her parents.",
+    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=Spirited+Away",
   },
   {
     id: 11,
@@ -89,6 +100,7 @@ const mediaData = [
     genre: "Non-Fiction",
     year: 2011,
     description: "Yuval Noah Harari traces the history of humankind from the Stone Age to the modern era.",
+    coverImage: "https://covers.openlibrary.org/b/isbn/9780062316097-L.jpg",
   },
   {
     id: 12,
@@ -97,6 +109,7 @@ const mediaData = [
     genre: "Action",
     year: 2008,
     description: "Batman faces the Joker, a criminal mastermind who seeks to create chaos in Gotham City.",
+    coverImage: "https://placehold.co/300x420/132572/ffd966?font=playfair-display&text=The+Dark+Knight",
   },
 ]
 

@@ -18,15 +18,13 @@ function useCustomMedia(user) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Failed to load custom media:', error.message)
-    } else if (data) {
-      setCustomMedia(data.map(rowToItem))
-    }
+    if (error) console.error('Failed to load custom media:', error.message)
+    else if (data) setCustomMedia(data.map(rowToItem))
     setLoading(false)
   }
 
-  // Insert a new row; returns { success, error }
+  // Returns { success, id, error } — id is needed so the caller can
+  // immediately upload images to the correct media record.
   async function addMedia(item) {
     const { data, error } = await supabase
       .from('custom_media')
@@ -46,11 +44,10 @@ function useCustomMedia(user) {
       return { success: false, error: error.message }
     }
 
-    setCustomMedia((prev) => [rowToItem(data), ...prev])
-    return { success: true }
+    setCustomMedia(prev => [rowToItem(data), ...prev])
+    return { success: true, id: data.id }
   }
 
-  // Update an existing row by id; returns { success, error }
   async function updateMedia(id, changes) {
     const { data, error } = await supabase
       .from('custom_media')
@@ -62,7 +59,7 @@ function useCustomMedia(user) {
         description: changes.description,
       })
       .eq('id', id)
-      .eq('user_id', user.id) // safety: never touch another user's row
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -70,14 +67,10 @@ function useCustomMedia(user) {
       console.error('Failed to update media:', error.message)
       return { success: false, error: error.message }
     }
-
-    setCustomMedia((prev) =>
-      prev.map((item) => (item.id === id ? rowToItem(data) : item))
-    )
+    setCustomMedia(prev => prev.map(item => (item.id === id ? rowToItem(data) : item)))
     return { success: true }
   }
 
-  // Delete a row by id; returns { success, error }
   async function deleteMedia(id) {
     const { error } = await supabase
       .from('custom_media')
@@ -89,15 +82,13 @@ function useCustomMedia(user) {
       console.error('Failed to delete media:', error.message)
       return { success: false, error: error.message }
     }
-
-    setCustomMedia((prev) => prev.filter((item) => item.id !== id))
+    setCustomMedia(prev => prev.filter(item => item.id !== id))
     return { success: true }
   }
 
   return { customMedia, loading, addMedia, updateMedia, deleteMedia }
 }
 
-// Maps a Supabase row to the shape the rest of the app expects
 function rowToItem(row) {
   return {
     id:          row.id,

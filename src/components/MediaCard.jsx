@@ -1,87 +1,74 @@
 import React, { useState } from 'react'
+import ImageGallery from './ImageGallery.jsx'
+import ImageUploader from './ImageUploader.jsx'
 
-// MediaCard renders a single media item in either view or edit mode.
 // Props:
-//   item           — media object
+//   item           — media object (includes optional coverImage for sample items)
 //   isFavorite     — boolean
-//   toggleFavorite — fn to add/remove from favorites
-//   onUpdate       — optional async fn(id, changes) => { success, error }
-//   onDelete       — optional async fn(id) => { success, error }
-//   When onUpdate/onDelete are undefined the Edit button is hidden (sample items).
-function MediaCard({ item, isFavorite, toggleFavorite, onUpdate, onDelete }) {
-  const [editing, setEditing]   = useState(false)
-  const [saving, setSaving]     = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [saveError, setSaveError] = useState('')
-
-  // Local copy of fields used only while editing
-  const [fields, setFields] = useState({
-    title:       item.title,
-    type:        item.type,
-    genre:       item.genre,
-    year:        item.year,
-    description: item.description,
-  })
-
-  // Confirm delete state — avoids native browser confirm()
+//   toggleFavorite — fn
+//   onUpdate       — optional async fn(id, changes) — present only for custom items
+//   onDelete       — optional async fn(id)
+//   itemImages     — array of user-uploaded images for this item (from useMediaImages)
+//   onUpload       — async fn(mediaId, files)
+//   onDeleteImage  — async fn(imageId, storagePath, mediaId)
+function MediaCard({
+  item, isFavorite, toggleFavorite,
+  onUpdate, onDelete,
+  itemImages = [], onUpload, onDeleteImage,
+}) {
+  const [editing, setEditing]         = useState(false)
+  const [saving, setSaving]           = useState(false)
+  const [deleting, setDeleting]       = useState(false)
+  const [saveError, setSaveError]     = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const [fields, setFields] = useState({
+    title: item.title, type: item.type,
+    genre: item.genre, year: item.year, description: item.description,
+  })
 
   function handleChange(e) {
     const { name, value } = e.target
-    setFields((prev) => ({ ...prev, [name]: value }))
+    setFields(prev => ({ ...prev, [name]: value }))
   }
 
   function handleEdit() {
-    // Reset fields to the current saved values before opening
-    setFields({
-      title:       item.title,
-      type:        item.type,
-      genre:       item.genre,
-      year:        item.year,
-      description: item.description,
-    })
+    setFields({ title: item.title, type: item.type, genre: item.genre, year: item.year, description: item.description })
     setSaveError('')
     setConfirmDelete(false)
     setEditing(true)
   }
 
-  function handleCancel() {
-    setEditing(false)
-    setSaveError('')
-    setConfirmDelete(false)
-  }
+  function handleCancel() { setEditing(false); setSaveError(''); setConfirmDelete(false) }
 
   async function handleSave() {
-    const allFilled = Object.values(fields).every((v) => v.toString().trim() !== '')
-    if (!allFilled) { setSaveError('All fields are required.'); return }
-
+    if (!Object.values(fields).every(v => v.toString().trim())) { setSaveError('All fields are required.'); return }
     setSaving(true)
-    setSaveError('')
     const result = await onUpdate(item.id, { ...fields, year: Number(fields.year) })
     setSaving(false)
-
-    if (result?.success) {
-      setEditing(false)
-    } else {
-      setSaveError(result?.error || 'Save failed. Please try again.')
-    }
+    if (result?.success) setEditing(false)
+    else setSaveError(result?.error || 'Save failed.')
   }
 
   async function handleDelete() {
     setDeleting(true)
     const result = await onDelete(item.id)
-    if (!result?.success) {
-      setDeleting(false)
-      setSaveError(result?.error || 'Delete failed. Please try again.')
-      setConfirmDelete(false)
-    }
-    // On success the item disappears from state — no further state update needed
+    if (!result?.success) { setDeleting(false); setSaveError(result?.error || 'Delete failed.'); setConfirmDelete(false) }
   }
 
-  // ── Edit mode ──────────────────────────────────────────────
+  // ── Edit mode ───────────────────────────────────────────────
   if (editing) {
     return (
       <div className="media-card card-editing">
+
+        {/* Image manager — upload / remove photos in edit mode */}
+        <div className="edit-section-label">Photos</div>
+        <ImageUploader
+          mediaId={item.id}
+          itemImages={itemImages}
+          onUpload={onUpload}
+          onDelete={onDeleteImage}
+        />
 
         <div className="edit-row">
           <div className="edit-group">
@@ -115,40 +102,29 @@ function MediaCard({ item, isFavorite, toggleFavorite, onUpdate, onDelete }) {
 
         {saveError && <p className="edit-error">{saveError}</p>}
 
-        {/* ── Action buttons ── */}
         <div className="edit-actions">
-          <button className="btn-save"   onClick={handleSave}   disabled={saving || deleting}>
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button className="btn-cancel" onClick={handleCancel} disabled={saving || deleting}>
-            Cancel
-          </button>
-
-          {/* Delete: first click shows confirmation, second click confirms */}
-          {!confirmDelete ? (
-            <button className="btn-delete" onClick={() => setConfirmDelete(true)} disabled={saving || deleting}>
-              Delete
-            </button>
-          ) : (
-            <span className="delete-confirm">
-              Sure?&nbsp;
-              <button className="btn-delete-confirm" onClick={handleDelete} disabled={deleting}>
-                {deleting ? 'Deleting…' : 'Yes, delete'}
-              </button>
-              <button className="btn-cancel" onClick={() => setConfirmDelete(false)}>
-                No
-              </button>
-            </span>
-          )}
+          <button className="btn-save"   onClick={handleSave}   disabled={saving || deleting}>{saving ? 'Saving…' : 'Save'}</button>
+          <button className="btn-cancel" onClick={handleCancel} disabled={saving || deleting}>Cancel</button>
+          {!confirmDelete
+            ? <button className="btn-delete" onClick={() => setConfirmDelete(true)} disabled={saving || deleting}>Delete</button>
+            : <span className="delete-confirm">
+                Sure?&nbsp;
+                <button className="btn-delete-confirm" onClick={handleDelete} disabled={deleting}>{deleting ? 'Deleting…' : 'Yes, delete'}</button>
+                <button className="btn-cancel" onClick={() => setConfirmDelete(false)}>No</button>
+              </span>
+          }
         </div>
 
       </div>
     )
   }
 
-  // ── View mode ──────────────────────────────────────────────
+  // ── View mode ───────────────────────────────────────────────
   return (
     <div className={`media-card ${isFavorite ? 'card-favorited' : ''}`}>
+
+      {/* Cover image / carousel — uploaded images take precedence over static cover */}
+      <ImageGallery uploadedImages={itemImages} coverImage={item.coverImage} />
 
       <div className="card-meta">
         <span className={`card-badge badge-${item.type}`}>{item.type}</span>
@@ -166,11 +142,8 @@ function MediaCard({ item, isFavorite, toggleFavorite, onUpdate, onDelete }) {
         {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
       </button>
 
-      {/* Edit button — only rendered when onUpdate is provided (custom items only) */}
       {onUpdate && (
-        <button className="btn-edit" onClick={handleEdit}>
-          Edit
-        </button>
+        <button className="btn-edit" onClick={handleEdit}>Edit</button>
       )}
 
     </div>
