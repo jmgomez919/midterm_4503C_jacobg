@@ -1,0 +1,103 @@
+// Sample media library — 12 items (mix of movies and books)
+// This is the app's data source until a real backend or state manager is added
+
+const mediaData = [
+  {
+    id: 1,
+    title: "The Hobbit",
+    type: "book",
+    genre: "Fantasy",
+    year: 1937,
+    description: "A fantasy adventure by J.R.R. Tolkien following Bilbo Baggins on an unexpected journey.",
+  },
+  {
+    id: 2,
+    title: "Inception",
+    type: "movie",
+    genre: "Sci-Fi",
+    year: 2010,
+    description: "A thief who steals corporate secrets through dream-sharing technology is given the task of planting an idea.",
+  },
+  {
+    id: 3,
+    title: "Dune",
+    type: "book",
+    genre: "Sci-Fi",
+    year: 1965,
+    description: "A sweeping science fiction epic set on the desert planet Arrakis, following Paul Atreides.",
+  },
+  {
+    id: 4,
+    title: "The Godfather",
+    type: "movie",
+    genre: "Crime",
+    year: 1972,
+    description: "The aging patriarch of an organized crime dynasty transfers control to his reluctant son.",
+  },
+  {
+    id: 5,
+    title: "To Kill a Mockingbird",
+    type: "book",
+    genre: "Drama",
+    year: 1960,
+    description: "A lawyer in the American South defends a Black man accused of a crime he did not commit.",
+  },
+  {
+    id: 6,
+    title: "Interstellar",
+    type: "movie",
+    genre: "Sci-Fi",
+    year: 2014,
+    description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+  },
+  {
+    id: 7,
+    title: "1984",
+    type: "book",
+    genre: "Dystopian",
+    year: 1949,
+    description: "George Orwell's chilling portrayal of a totalitarian society under constant surveillance.",
+  },
+  {
+    id: 8,
+    title: "Parasite",
+    type: "movie",
+    genre: "Thriller",
+    year: 2019,
+    description: "A poor family schemes to become employed by a wealthy family, with darkly comic and tragic results.",
+  },
+  {
+    id: 9,
+    title: "The Alchemist",
+    type: "book",
+    genre: "Fiction",
+    year: 1988,
+    description: "A young shepherd travels from Spain to Egypt in search of treasure and self-discovery.",
+  },
+  {
+    id: 10,
+    title: "Spirited Away",
+    type: "movie",
+    genre: "Animation",
+    year: 2001,
+    description: "A young girl wanders into a world ruled by spirits and must work to free herself and her parents.",
+  },
+  {
+    id: 11,
+    title: "Sapiens",
+    type: "book",
+    genre: "Non-Fiction",
+    year: 2011,
+    description: "Yuval Noah Harari traces the history of humankind from the Stone Age to the modern era.",
+  },
+  {
+    id: 12,
+    title: "The Dark Knight",
+    type: "movie",
+    genre: "Action",
+    year: 2008,
+    description: "Batman faces the Joker, a criminal mastermind who seeks to create chaos in Gotham City.",
+  },
+]
+
+export default mediaData
