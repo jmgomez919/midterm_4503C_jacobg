@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 
-const BUCKET = 'media-images'
+const CLOUD_NAME     = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const UPLOAD_PRESET  = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+const UPLOAD_URL     = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
 
 function useMediaImages(user) {
   const [images, setImages] = useState({})
@@ -16,7 +18,7 @@ function useMediaImages(user) {
       .from('media_images')
       .select('*')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: true }) // order by insert time, not position
+      .order('created_at', { ascending: true })
 
     if (error) { console.error('Failed to load images:', error.message); return }
 
@@ -28,8 +30,21 @@ function useMediaImages(user) {
     setImages(grouped)
   }
 
-  // Uploads files and returns { success: true } or { success: false, error: string }
-  // so the caller can surface failures to the user instead of silently swallowing them.
+  async function uploadToCloudinary(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', UPLOAD_PRESET)
+    formData.append('folder', `media-tracker/${user.id}`)
+
+    const res = await fetch(UPLOAD_URL, { method: 'POST', body: formData })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error?.message || 'Cloudinary upload failed')
+    }
+    const data = await res.json()
+    return { publicId: data.public_id, url: data.secure_url }
+  }
+
   async function uploadImages(mediaId, files) {
     const mediaIdStr = String(mediaId)
     const existing   = images[mediaIdStr] || []
@@ -42,36 +57,35 @@ function useMediaImages(user) {
 
     for (let i = 0; i < toUpload.length; i++) {
       const file = toUpload[i]
-      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase()
 
-      // Include a timestamp in the path so retries never collide in Storage
-      const path = `${user.id}/${mediaIdStr}/${Date.now()}_${i}.${ext}`
-
-      // upsert:true avoids "duplicate path" errors on retry
-      const { error: storageErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { upsert: true })
-
-      if (storageErr) {
-        console.error('Storage upload failed:', storageErr.message)
-        lastError = `Storage error: ${storageErr.message}`
+      let cloudinaryPublicId, cloudinaryUrl
+      try {
+        const result = await uploadToCloudinary(file)
+        cloudinaryPublicId = result.publicId
+        cloudinaryUrl      = result.url
+      } catch (err) {
+        console.error('Cloudinary upload failed:', err.message)
+        lastError = err.message
         continue
       }
 
-      // position = number of images that existed + how many we've added so far
       const position = existing.length + added.length
 
       const { data: row, error: dbErr } = await supabase
         .from('media_images')
-        .insert({ user_id: user.id, media_id: mediaIdStr, storage_path: path, position })
+        .insert({
+          user_id:      user.id,
+          media_id:     mediaIdStr,
+          storage_path: cloudinaryPublicId,
+          position,
+          cloudinary_url: cloudinaryUrl,
+        })
         .select()
         .single()
 
       if (dbErr) {
         console.error('Image record insert failed:', dbErr.message)
         lastError = `Database error: ${dbErr.message}`
-        // Remove the orphaned file from Storage so it doesn't accumulate
-        await supabase.storage.from(BUCKET).remove([path])
         continue
       }
 
@@ -86,19 +100,15 @@ function useMediaImages(user) {
     }
 
     if (added.length === 0) {
-      return { success: false, error: lastError || 'Upload failed. Check that the Supabase storage bucket and media_images table exist.' }
+      return { success: false, error: lastError || 'Upload failed.' }
     }
-
-    // Partial success: some files uploaded, some failed
     if (added.length < toUpload.length) {
       return { success: true, partial: true, error: lastError }
     }
-
     return { success: true }
   }
 
   async function deleteImage(imageId, storagePath, mediaId) {
-    await supabase.storage.from(BUCKET).remove([storagePath])
     await supabase.from('media_images').delete().eq('id', imageId)
 
     const mediaIdStr = String(mediaId)
@@ -112,12 +122,11 @@ function useMediaImages(user) {
 }
 
 function rowToImage(row) {
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(row.storage_path)
   return {
     id:          row.id,
     storagePath: row.storage_path,
     position:    row.position,
-    url:         data.publicUrl,
+    url:         row.cloudinary_url || row.storage_path,
   }
 }
 

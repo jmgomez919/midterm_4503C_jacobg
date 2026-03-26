@@ -111,6 +111,24 @@ const mediaData = [
     description: "Batman faces the Joker, a criminal mastermind who seeks to create chaos in Gotham City.",
     coverImage: "https://upload.wikimedia.org/wikipedia/en/1/1c/The_Dark_Knight_(2008_film).jpg",
   },
+  {
+    id: 13,
+    title: "Liar Liar",
+    type: "movie",
+    genre: "Comedy",
+    year: 1997,
+    description: "A lawyer who is magically compelled to tell only the truth for 24 hours must navigate his career and personal life.",
+    coverImage: "https://res.cloudinary.com/dj4lcgzrm/image/upload/v1774492682/media-tracker/liar-liar-1997.jpg",
+  },
+  {
+    id: 14,
+    title: "Click",
+    type: "movie",
+    genre: "Comedy",
+    year: 2006,
+    description: "A workaholic architect discovers a magical remote control that lets him fast-forward and rewind through parts of his life.",
+    coverImage: "https://res.cloudinary.com/dj4lcgzrm/image/upload/v1774492678/media-tracker/click-2006.jpg",
+  },
 ]
 
 export default mediaData
